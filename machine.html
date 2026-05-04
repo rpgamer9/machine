@@ -1,721 +1,1044 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Machine Defender | Turret vs Rogue AI</title>
-    <style>
-        * {
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, user-scalable=no"
+        />
+        <title>Machine Defender | Turret vs Rogue AI</title>
+        <style>
+            * {
+                user-select: none;
+                -webkit-tap-highlight-color: transparent;
+            }
 
-        body {
-            background: linear-gradient(145deg, #0a0f1e 0%, #0c1222 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Courier New', 'Fira Code', monospace;
-            margin: 0;
-            padding: 20px;
-        }
+            body {
+                background: linear-gradient(145deg, #0a0f1e 0%, #0c1222 100%);
+                min-height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-family: "Courier New", "Fira Code", monospace;
+                margin: 0;
+                padding: 20px;
+            }
 
-        .game-container {
-            background: #000000aa;
-            border-radius: 48px;
-            padding: 20px;
-            backdrop-filter: blur(2px);
-            box-shadow: 0 20px 35px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
-            border: 1px solid #ffcc44aa;
-        }
+            .game-container {
+                background: #000000aa;
+                border-radius: 48px;
+                padding: 20px;
+                backdrop-filter: blur(2px);
+                box-shadow:
+                    0 20px 35px rgba(0, 0, 0, 0.5),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+                border: 1px solid #ffcc44aa;
+            }
 
-        canvas {
-            display: block;
-            margin: 0 auto;
-            border-radius: 24px;
-            box-shadow: 0 0 0 3px #ffaa33, 0 10px 25px black;
-            cursor: crosshair;
-            background: #1a1f2e;
-        }
+            canvas {
+                display: block;
+                margin: 0 auto;
+                border-radius: 24px;
+                box-shadow:
+                    0 0 0 3px #ffaa33,
+                    0 10px 25px black;
+                cursor: crosshair;
+                background: #1a1f2e;
+            }
 
-        .info-panel {
-            margin-top: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            gap: 20px;
-            flex-wrap: wrap;
-            background: #03060cee;
-            padding: 12px 24px;
-            border-radius: 60px;
-            border: 1px solid #ffcc55;
-            backdrop-filter: blur(4px);
-        }
+            .info-panel {
+                margin-top: 20px;
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                gap: 20px;
+                flex-wrap: wrap;
+                background: #03060cee;
+                padding: 12px 24px;
+                border-radius: 60px;
+                border: 1px solid #ffcc55;
+                backdrop-filter: blur(4px);
+            }
 
-        .stats {
-            display: flex;
-            gap: 32px;
-            font-weight: bold;
-            text-shadow: 0 0 3px cyan;
-        }
+            .stats {
+                display: flex;
+                gap: 20px;
+                font-weight: bold;
+                text-shadow: 0 0 3px cyan;
+                flex-wrap: wrap;
+            }
 
-        .stat {
-            background: #11161f;
-            padding: 6px 18px;
-            border-radius: 32px;
-            color: #ffdd99;
-            font-size: 1.4rem;
-            letter-spacing: 1px;
-        }
+            .stat {
+                background: #11161f;
+                padding: 6px 18px;
+                border-radius: 32px;
+                color: #ffdd99;
+                font-size: 1.2rem;
+                letter-spacing: 1px;
+            }
 
-        .stat span {
-            color: #88ffaa;
-            font-size: 1.8rem;
-            font-weight: bold;
-            margin-right: 8px;
-        }
+            .stat span {
+                color: #88ffaa;
+                font-size: 1.6rem;
+                font-weight: bold;
+                margin-right: 6px;
+            }
 
-        button {
-            background: #2a2f3f;
-            border: none;
-            font-family: monospace;
-            font-weight: bold;
-            font-size: 1.2rem;
-            padding: 6px 20px;
-            border-radius: 40px;
-            color: #ffdd88;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 0 #ffaa33;
-        }
+            button {
+                background: #2a2f3f;
+                border: none;
+                font-family: monospace;
+                font-weight: bold;
+                font-size: 1.1rem;
+                padding: 6px 18px;
+                border-radius: 40px;
+                color: #ffdd88;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                box-shadow: 0 2px 0 #ffaa33;
+            }
 
-        button:hover {
-            background: #3e445b;
-            transform: scale(0.97);
-            color: #ffcc66;
-        }
+            button:hover {
+                background: #3e445b;
+                transform: scale(0.97);
+                color: #ffcc66;
+            }
 
-        .warning {
-            background: #411e1e;
-            color: #ffaa66;
-            padding: 6px 16px;
-            border-radius: 28px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+            .skill-buttons {
+                display: flex;
+                gap: 12px;
+            }
 
-        .warning::before {
-            content: "⚠️";
-            font-size: 1.2rem;
-        }
+            .skill-btn {
+                background: #1e2a2f;
+                box-shadow: 0 1px 0 #88aaff;
+                font-size: 0.9rem;
+                padding: 4px 14px;
+            }
 
-        @media (max-width: 780px) {
-            .stat { font-size: 1rem; padding: 4px 12px; }
-            .stat span { font-size: 1.3rem; }
-            .info-panel { padding: 8px 16px; }
-        }
-    </style>
-</head>
-<body>
-<div>
-    <div class="game-container">
-        <canvas id="gameCanvas" width="900" height="550"></canvas>
-        <div class="info-panel">
-            <div class="stats">
-                <div class="stat"><span>⚙️</span> <span id="scoreValue">0</span></div>
-                <div class="stat"><span>❤️</span> <span id="healthValue">100</span></div>
-                <div class="stat"><span>🤖</span> <span id="enemiesCount">0</span></div>
+            .warning {
+                background: #411e1e;
+                color: #ffaa66;
+                padding: 6px 16px;
+                border-radius: 28px;
+                font-size: 0.8rem;
+                font-weight: bold;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .warning::before {
+                content: "⚠️";
+                font-size: 1.1rem;
+            }
+
+            @media (max-width: 780px) {
+                .stat {
+                    font-size: 0.9rem;
+                    padding: 4px 10px;
+                }
+                .stat span {
+                    font-size: 1.2rem;
+                }
+                .info-panel {
+                    padding: 8px 12px;
+                }
+                .skill-btn {
+                    font-size: 0.7rem;
+                    padding: 3px 8px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div>
+            <div class="game-container">
+                <canvas id="gameCanvas" width="900" height="550"></canvas>
+                <div class="info-panel">
+                    <div class="stats">
+                        <div class="stat">
+                            <span>⚙️</span> <span id="scoreValue">0</span>
+                        </div>
+                        <div class="stat">
+                            <span>❤️</span> <span id="healthValue">150</span>
+                        </div>
+                        <div class="stat">
+                            <span>🤖</span> <span id="enemiesCount">0</span>
+                        </div>
+                        <div class="stat">
+                            <span>💣</span> <span id="bombCooldown">READY</span>
+                        </div>
+                        <div class="stat">
+                            <span>🐌</span> <span id="slowCooldown">READY</span>
+                        </div>
+                    </div>
+                    <div class="warning">CAUTION : ROGUE AI INCOMING</div>
+                    <button id="resetBtn">⟳ REBOOT MACHINE</button>
+                </div>
+                <div
+                    style="
+                        display: flex;
+                        justify-content: center;
+                        gap: 12px;
+                        margin-top: 12px;
+                    "
+                >
+                    <button id="bombBtn" class="skill-btn">
+                        💣 SMART BOMB [B]
+                    </button>
+                    <button id="slowBtn" class="skill-btn">
+                        🐌 SLOW FIELD [S]
+                    </button>
+                </div>
             </div>
-            <div class="warning">CAUTION : ROGUE AI INCOMING</div>
-            <button id="resetBtn">⟳ REBOOT MACHINE</button>
+            <div
+                style="
+                    text-align: center;
+                    margin-top: 16px;
+                    color: #ccaa66;
+                    font-size: 12px;
+                "
+            >
+                🖱️ GERAKAN MOUSE / JARI → TARGET & TEMBAK OTOMATIS | 🔫 TURRET
+                DEFENSE SYSTEM | 💣[B] 🐌[S]
+            </div>
         </div>
-    </div>
-    <div style="text-align: center; margin-top: 16px; color:#ccaa66; font-size:12px;">
-        🖱️ GERAKAN MOUSE / JARI → TARGET & TEMBAK OTOMATIS | 🔫 TURRET DEFENSE SYSTEM
-    </div>
-</div>
 
-<script>
-    (function(){
-        // ----- CANVAS -----
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        
-        // ----- GAME STATE -----
-        let score = 0;
-        let health = 100;
-        let gameRunning = true;
-        let frame = 0;
-        let enemies = [];
-        let bullets = [];
-        
-        // Turret position (tetap di tengah bawah)
-        const turret = {
-            x: canvas.width/2,
-            y: canvas.height - 55,
-            radius: 22
-        };
-        
-        // Arah turret (sudut ke target mouse)
-        let aimAngle = 0;       // radian
-        let mouseX = turret.x, mouseY = turret.y;
-        
-        // Cooldown tembak (frame cooldown)
-        let shootCooldown = 0;
-        const SHOOT_DELAY_FRAMES = 12;  // kira-kira 0.2 detik di 60fps
-        
-        // Efek partikel (ledakan kecil)
-        let particles = [];
-        
-        // ----- PARAMETER SPAWN ENEMY -----
-        let spawnCounter = 0;
-        let baseSpawnDelay = 45;   // frame antar spawn (semakin tinggi skor semakin cepat)
-        
-        // ----- MUSUH (Rogue AI Drone) -----
-        class Enemy {
-            constructor(x, y, speed, hp, size, type) {
-                this.x = x;
-                this.y = y;
-                this.speed = speed;
-                this.hp = hp;
-                this.maxHp = hp;
-                this.size = size;
-                this.type = type;   // "drone" , "tank"
-                this.angleToBase = 0;
-            }
-            
-            update() {
-                // bergerak menuju turret (posisi meriam)
-                const dx = turret.x - this.x;
-                const dy = turret.y - this.y;
-                const dist = Math.hypot(dx, dy);
-                if(dist > 0.01) {
-                    const moveX = (dx / dist) * this.speed;
-                    const moveY = (dy / dist) * this.speed;
-                    this.x += moveX;
-                    this.y += moveY;
-                }
-                this.angleToBase = Math.atan2(dy, dx);
-            }
-            
-            draw(ctx) {
-                // simpan state
-                ctx.save();
-                ctx.shadowBlur = 0;
-                // badai warna berdasarkan tipe
-                if(this.type === "drone") {
-                    // drone cepat, kecil
-                    ctx.fillStyle = "#dd3355";
-                    ctx.shadowColor = "#ff3366";
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
-                    ctx.fill();
-                    ctx.fillStyle = "#aa1122";
-                    ctx.beginPath();
-                    ctx.arc(this.x-3, this.y-2, 3, 0, Math.PI*2);
-                    ctx.fill();
-                    ctx.fillStyle = "white";
-                    ctx.beginPath();
-                    ctx.arc(this.x-4, this.y-3, 1.2, 0, Math.PI*2);
-                    ctx.fill();
-                    // sayap logam
-                    ctx.beginPath();
-                    ctx.moveTo(this.x-12, this.y-2);
-                    ctx.lineTo(this.x-22, this.y-6);
-                    ctx.lineTo(this.x-18, this.y);
-                    ctx.fillStyle = "#aa8866";
-                    ctx.fill();
-                    ctx.beginPath();
-                    ctx.moveTo(this.x+12, this.y-2);
-                    ctx.lineTo(this.x+22, this.y-6);
-                    ctx.lineTo(this.x+18, this.y);
-                    ctx.fill();
-                } else {
-                    // tank heavy (lebih lambat tapi tahan banting)
-                    ctx.fillStyle = "#887755";
-                    ctx.shadowColor = "#cc8844";
-                    ctx.beginPath();
-                    ctx.ellipse(this.x, this.y, this.size, this.size*0.9, 0, 0, Math.PI*2);
-                    ctx.fill();
-                    ctx.fillStyle = "#664422";
-                    ctx.beginPath();
-                    ctx.rect(this.x-9, this.y-5, 18, 8);
-                    ctx.fill();
-                    ctx.fillStyle = "#ffaa44";
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y-2, 4, 0, Math.PI*2);
-                    ctx.fill();
-                    ctx.fillStyle = "black";
-                    ctx.beginPath();
-                    ctx.arc(this.x-1, this.y-3, 1.5, 0, Math.PI*2);
-                    ctx.fill();
-                }
-                // Health bar
-                const hpPercent = this.hp / this.maxHp;
-                ctx.fillStyle = "#ff4444";
-                ctx.fillRect(this.x-this.size-2, this.y-this.size-6, (this.size*2+4)*hpPercent, 5);
-                ctx.strokeStyle = "#000000";
-                ctx.lineWidth = 0.5;
-                ctx.strokeRect(this.x-this.size-2, this.y-this.size-6, this.size*2+4, 5);
-                ctx.restore();
-            }
-            
-            takeDamage(amount) {
-                this.hp -= amount;
-                return this.hp <= 0;
-            }
-        }
-        
-        // ----- PELURU (energi plasma) -----
-        class Bullet {
-            constructor(x, y, angle, damage) {
-                this.x = x;
-                this.y = y;
-                this.angle = angle;
-                this.speed = 9;
-                this.damage = damage;
-                this.radius = 5;
-                this.life = true;
-            }
-            
-            update() {
-                this.x += Math.cos(this.angle) * this.speed;
-                this.y += Math.sin(this.angle) * this.speed;
-                // batas luar canvas
-                if(this.x < -50 || this.x > canvas.width+50 || this.y < -50 || this.y > canvas.height+100) {
-                    this.life = false;
-                }
-            }
-            
-            draw(ctx) {
-                ctx.save();
-                ctx.shadowBlur = 8;
-                ctx.shadowColor = "#ffff80";
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, 5, 0, Math.PI*2);
-                ctx.fillStyle = "#ffdd66";
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, 2.5, 0, Math.PI*2);
-                ctx.fillStyle = "white";
-                ctx.fill();
-                ctx.restore();
-            }
-        }
-        
-        // ----- PARTIKEL (ledakan kecil)-----
-        class Particle {
-            constructor(x, y, vx, vy, life, color) {
-                this.x = x;
-                this.y = y;
-                this.vx = vx;
-                this.vy = vy;
-                this.life = life;
-                this.maxLife = life;
-                this.color = color;
-                this.size = 3 + Math.random()*4;
-            }
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                this.vy += 0.15;
-                this.life -= 1;
-            }
-            draw(ctx) {
-                ctx.globalAlpha = Math.min(1, this.life / this.maxLife * 0.9);
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size * (this.life/this.maxLife), 0, Math.PI*2);
-                ctx.fill();
-                ctx.globalAlpha = 1;
-            }
-        }
-        
-        function addParticles(x, y, color, count=6) {
-            for(let i=0;i<count;i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 2.5 + 1;
-                const vx = Math.cos(angle) * speed;
-                const vy = Math.sin(angle) * speed - 1.2;
-                particles.push(new Particle(x, y, vx, vy, 18+Math.random()*10, color));
-            }
-        }
-        
-        // ----- RESET GAME -----
-        function resetGame() {
-            gameRunning = true;
-            score = 0;
-            health = 100;
-            enemies = [];
-            bullets = [];
-            particles = [];
-            shootCooldown = 0;
-            spawnCounter = 5;
-            updateUI();
-            // reset mouse position default
-            mouseX = turret.x;
-            mouseY = turret.y;
-            aimAngle = 0;
-            // spawn awal beberapa musuh untuk suasana
-            for(let i=0;i<2;i++){
-                spawnEnemyImmediate();
-            }
-        }
-        
-        function spawnEnemyImmediate() {
-            let side = Math.floor(Math.random() * 4); // 0: kiri,1:kanan,2:atas,3:bawah
-            let x,y;
-            const padding = 30;
-            if(side === 0){ // kiri
-                x = -padding;
-                y = Math.random() * canvas.height;
-            } else if(side === 1){ // kanan
-                x = canvas.width + padding;
-                y = Math.random() * canvas.height;
-            } else if(side === 2){ // atas
-                x = Math.random() * canvas.width;
-                y = -padding;
-            } else {
-                x = Math.random() * canvas.width;
-                y = canvas.height + padding;
-            }
-            // tipe musuh berdasarkan skor & random
-            let type = "drone";
-            let hp = 1;
-            let speed = 1.3;
-            let size = 14;
-            if(Math.random() < 0.3 + Math.min(0.4, score/500) && score > 80) {
-                type = "tank";
-                hp = 3;
-                speed = 0.75;
-                size = 20;
-            } else if(score > 150 && Math.random()<0.4){
-                type = "tank";
-                hp = 2;
-                speed = 0.9;
-                size = 18;
-            }
-            // semakin tinggi score makin cepat musuh
-            let speedBonus = Math.min(1.6, score / 400);
-            if(type === "drone") speed += speedBonus * 0.7;
-            else speed += speedBonus * 0.3;
-            
-            enemies.push(new Enemy(x, y, speed, hp, size, type));
-        }
-        
-        // ----- LOGIKA TEMBAK -----
-        function tryShoot() {
-            if(!gameRunning) return;
-            if(shootCooldown > 0) return;
-            // arah sesuai aimAngle (ke mouse)
-            const angle = aimAngle;
-            // damage berdasarkan upgrade (konsisten 1 damage, tank butuh 2-3 hit)
-            let damage = 1;
-            // tambahan efek: critical kecil?
-            bullets.push(new Bullet(turret.x + Math.cos(angle)*18, turret.y + Math.sin(angle)*12, angle, damage));
-            shootCooldown = SHOOT_DELAY_FRAMES;
-            // efek suara visual getar kecil (hanya visual)
-        }
-        
-        // ----- UPDATE MUSUH & TABRAKAN -----
-        function updateEnemiesAndCollision() {
-            for(let i=0;i<enemies.length;i++) {
-                const e = enemies[i];
-                e.update();
-                // cek collision dengan turret (jika menyentuh -> damage health)
-                const distToTurret = Math.hypot(e.x - turret.x, e.y - turret.y);
-                if(distToTurret < e.size + turret.radius) {
-                    // musuh menabrak turret
-                    let dmg = (e.type === "tank") ? 18 : 12;
-                    health = Math.max(0, health - dmg);
-                    addParticles(e.x, e.y, "#ff6633", 12);
-                    enemies.splice(i,1);
-                    i--;
-                    if(health <= 0) {
-                        gameRunning = false;
-                        health = 0;
+        <script>
+            (function () {
+                // ----- CANVAS -----
+                const canvas = document.getElementById("gameCanvas");
+                const ctx = canvas.getContext("2d");
+
+                // ----- GAME STATE -----
+                let score = 0;
+                let health = 150; // BUFF: health awal lebih besar
+                let gameRunning = true;
+                let frame = 0;
+                let enemies = [];
+                let bullets = [];
+
+                // Turret position (tetap di tengah bawah - bisa diubah ke tengah jika mau)
+                // OPSI: pindah ke tengah layar untuk solusi total
+                const turret = {
+                    x: canvas.width / 2,
+                    y: canvas.height - 55,
+                    radius: 22,
+                };
+
+                // Arah turret (sudut ke target mouse)
+                let aimAngle = 0;
+                let mouseX = turret.x,
+                    mouseY = turret.y;
+
+                // Cooldown tembak (lebih cepat)
+                let shootCooldown = 0;
+                const SHOOT_DELAY_FRAMES = 7; // BUFF: lebih cepat dari 12
+
+                // Efek partikel
+                let particles = [];
+
+                // ----- SKILL SYSTEM -----
+                let bombReady = true;
+                let bombCooldown = 0;
+                let slowActive = false;
+                let slowTimer = 0;
+                let originalSpeeds = []; // untuk menyimpan speed asli musuh saat slow
+
+                // ----- PARAMETER SPAWN ENEMY -----
+                let spawnCounter = 0;
+                let baseSpawnDelay = 45;
+
+                // ----- MUSUH -----
+                class Enemy {
+                    constructor(x, y, speed, hp, size, type) {
+                        this.x = x;
+                        this.y = y;
+                        this.speed = speed;
+                        this.originalSpeed = speed;
+                        this.hp = hp;
+                        this.maxHp = hp;
+                        this.size = size;
+                        this.type = type;
+                        this.angleToBase = 0;
                     }
+
+                    update() {
+                        const dx = turret.x - this.x;
+                        const dy = turret.y - this.y;
+                        const dist = Math.hypot(dx, dy);
+                        if (dist > 0.01) {
+                            const moveX = (dx / dist) * this.speed;
+                            const moveY = (dy / dist) * this.speed;
+                            this.x += moveX;
+                            this.y += moveY;
+                        }
+                        this.angleToBase = Math.atan2(dy, dx);
+                    }
+
+                    draw(ctx) {
+                        ctx.save();
+                        ctx.shadowBlur = 0;
+                        if (this.type === "drone") {
+                            ctx.fillStyle = "#dd3355";
+                            ctx.shadowColor = "#ff3366";
+                            ctx.beginPath();
+                            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = "#aa1122";
+                            ctx.beginPath();
+                            ctx.arc(this.x - 3, this.y - 2, 3, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = "white";
+                            ctx.beginPath();
+                            ctx.arc(
+                                this.x - 4,
+                                this.y - 3,
+                                1.2,
+                                0,
+                                Math.PI * 2,
+                            );
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.moveTo(this.x - 12, this.y - 2);
+                            ctx.lineTo(this.x - 22, this.y - 6);
+                            ctx.lineTo(this.x - 18, this.y);
+                            ctx.fillStyle = "#aa8866";
+                            ctx.fill();
+                            ctx.beginPath();
+                            ctx.moveTo(this.x + 12, this.y - 2);
+                            ctx.lineTo(this.x + 22, this.y - 6);
+                            ctx.lineTo(this.x + 18, this.y);
+                            ctx.fill();
+                        } else {
+                            ctx.fillStyle = "#887755";
+                            ctx.shadowColor = "#cc8844";
+                            ctx.beginPath();
+                            ctx.ellipse(
+                                this.x,
+                                this.y,
+                                this.size,
+                                this.size * 0.9,
+                                0,
+                                0,
+                                Math.PI * 2,
+                            );
+                            ctx.fill();
+                            ctx.fillStyle = "#664422";
+                            ctx.beginPath();
+                            ctx.rect(this.x - 9, this.y - 5, 18, 8);
+                            ctx.fill();
+                            ctx.fillStyle = "#ffaa44";
+                            ctx.beginPath();
+                            ctx.arc(this.x, this.y - 2, 4, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.fillStyle = "black";
+                            ctx.beginPath();
+                            ctx.arc(
+                                this.x - 1,
+                                this.y - 3,
+                                1.5,
+                                0,
+                                Math.PI * 2,
+                            );
+                            ctx.fill();
+                        }
+                        const hpPercent = this.hp / this.maxHp;
+                        ctx.fillStyle = "#ff4444";
+                        ctx.fillRect(
+                            this.x - this.size - 2,
+                            this.y - this.size - 6,
+                            (this.size * 2 + 4) * hpPercent,
+                            5,
+                        );
+                        ctx.strokeStyle = "#000000";
+                        ctx.lineWidth = 0.5;
+                        ctx.strokeRect(
+                            this.x - this.size - 2,
+                            this.y - this.size - 6,
+                            this.size * 2 + 4,
+                            5,
+                        );
+                        ctx.restore();
+                    }
+
+                    takeDamage(amount) {
+                        this.hp -= amount;
+                        return this.hp <= 0;
+                    }
+                }
+
+                // ----- PELURU -----
+                class Bullet {
+                    constructor(x, y, angle, damage) {
+                        this.x = x;
+                        this.y = y;
+                        this.angle = angle;
+                        this.speed = 9;
+                        this.damage = damage;
+                        this.radius = 5;
+                        this.life = true;
+                    }
+
+                    update() {
+                        this.x += Math.cos(this.angle) * this.speed;
+                        this.y += Math.sin(this.angle) * this.speed;
+                        if (
+                            this.x < -50 ||
+                            this.x > canvas.width + 50 ||
+                            this.y < -50 ||
+                            this.y > canvas.height + 100
+                        ) {
+                            this.life = false;
+                        }
+                    }
+
+                    draw(ctx) {
+                        ctx.save();
+                        ctx.shadowBlur = 8;
+                        ctx.shadowColor = "#ffff80";
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
+                        ctx.fillStyle = "#ffdd66";
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, 2.5, 0, Math.PI * 2);
+                        ctx.fillStyle = "white";
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                }
+
+                // ----- PARTIKEL -----
+                class Particle {
+                    constructor(x, y, vx, vy, life, color) {
+                        this.x = x;
+                        this.y = y;
+                        this.vx = vx;
+                        this.vy = vy;
+                        this.life = life;
+                        this.maxLife = life;
+                        this.color = color;
+                        this.size = 3 + Math.random() * 4;
+                    }
+                    update() {
+                        this.x += this.vx;
+                        this.y += this.vy;
+                        this.vy += 0.15;
+                        this.life -= 1;
+                    }
+                    draw(ctx) {
+                        ctx.globalAlpha = Math.min(
+                            1,
+                            (this.life / this.maxLife) * 0.9,
+                        );
+                        ctx.fillStyle = this.color;
+                        ctx.beginPath();
+                        ctx.arc(
+                            this.x,
+                            this.y,
+                            this.size * (this.life / this.maxLife),
+                            0,
+                            Math.PI * 2,
+                        );
+                        ctx.fill();
+                        ctx.globalAlpha = 1;
+                    }
+                }
+
+                function addParticles(x, y, color, count = 6) {
+                    for (let i = 0; i < count; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const speed = Math.random() * 2.5 + 1;
+                        const vx = Math.cos(angle) * speed;
+                        const vy = Math.sin(angle) * speed - 1.2;
+                        particles.push(
+                            new Particle(
+                                x,
+                                y,
+                                vx,
+                                vy,
+                                18 + Math.random() * 10,
+                                color,
+                            ),
+                        );
+                    }
+                }
+
+                // ----- SMART BOMB -----
+                function useSmartBomb() {
+                    if (!gameRunning) return false;
+                    if (bombCooldown > 0) return false;
+                    if (enemies.length === 0) return false;
+
+                    enemies = [];
+                    addParticles(
+                        canvas.width / 2,
+                        canvas.height / 2,
+                        "#ff8844",
+                        40,
+                    );
+                    bombCooldown = 180; // 3 detik cooldown (60fps)
                     updateUI();
-                    continue;
+                    return true;
                 }
-                // cek jika keluar batas terlalu jauh (opsional hapus)
-                if(e.x < -200 || e.x > canvas.width+200 || e.y < -200 || e.y > canvas.height+200){
-                    enemies.splice(i,1);
-                    i--;
+
+                // ----- SLOW FIELD -----
+                function useSlowField() {
+                    if (!gameRunning) return false;
+                    if (slowActive) return false;
+                    if (slowTimer > 0) return false;
+
+                    slowActive = true;
+                    slowTimer = 120; // 2 detik
+
+                    // Simpan speed asli dan kurangi 60%
+                    originalSpeeds = [];
+                    for (let i = 0; i < enemies.length; i++) {
+                        originalSpeeds.push(enemies[i].speed);
+                        enemies[i].speed = enemies[i].originalSpeed * 0.4;
+                    }
+
+                    addParticles(
+                        canvas.width / 2,
+                        canvas.height / 2,
+                        "#88aaff",
+                        25,
+                    );
+                    return true;
                 }
-            }
-        }
-        
-        // ----- UPDATE PELURU & DAMAGE -----
-        function updateBullets() {
-            for(let i=0;i<bullets.length;i++) {
-                bullets[i].update();
-                if(!bullets[i].life) {
-                    bullets.splice(i,1);
-                    i--;
-                    continue;
-                }
-                let hitIndex = -1;
-                for(let j=0;j<enemies.length;j++) {
-                    const e = enemies[j];
-                    const distToEnemy = Math.hypot(bullets[i].x - e.x, bullets[i].y - e.y);
-                    if(distToEnemy < e.size + 6) {
-                        hitIndex = j;
-                        break;
+
+                // ----- RESET GAME -----
+                function resetGame() {
+                    gameRunning = true;
+                    score = 0;
+                    health = 150;
+                    enemies = [];
+                    bullets = [];
+                    particles = [];
+                    shootCooldown = 0;
+                    spawnCounter = 5;
+                    bombCooldown = 0;
+                    slowActive = false;
+                    slowTimer = 0;
+                    originalSpeeds = [];
+                    updateUI();
+                    mouseX = turret.x;
+                    mouseY = turret.y;
+                    aimAngle = 0;
+                    // spawn awal beberapa musuh
+                    for (let i = 0; i < 2; i++) {
+                        spawnEnemyImmediate();
                     }
                 }
-                if(hitIndex !== -1) {
-                    const enemy = enemies[hitIndex];
-                    const wasAlive = enemy.hp > 0;
-                    const killed = enemy.takeDamage(bullets[i].damage);
-                    // efek partikel
-                    addParticles(bullets[i].x, bullets[i].y, "#ffaa55", 6);
-                    if(killed) {
-                        // tambah skor
-                        let addScore = (enemy.type === "tank") ? 25 : 10;
-                        score += addScore;
-                        addParticles(enemy.x, enemy.y, "#ffaa33", 14);
-                        enemies.splice(hitIndex,1);
+
+                // ----- SPAWN MUSUH (TIDAK DI BELAKANG TURRET) -----
+                function spawnEnemyImmediate() {
+                    let side = Math.floor(Math.random() * 3); // HANYA 0,1,2 (kiri, kanan, atas) - TIDAK BAWAH
+                    let x, y;
+                    const padding = 30;
+                    const safeRadius = 130; // zona aman dari turret
+
+                    let attempts = 0;
+                    let validSpawn = false;
+
+                    while (!validSpawn && attempts < 15) {
+                        if (side === 0) {
+                            // kiri
+                            x = -padding;
+                            y = Math.random() * canvas.height;
+                        } else if (side === 1) {
+                            // kanan
+                            x = canvas.width + padding;
+                            y = Math.random() * canvas.height;
+                        } else {
+                            // atas
+                            x = Math.random() * canvas.width;
+                            y = -padding;
+                        }
+
+                        const distToTurret = Math.hypot(
+                            x - turret.x,
+                            y - turret.y,
+                        );
+                        if (distToTurret > safeRadius) {
+                            validSpawn = true;
+                        } else {
+                            side = Math.floor(Math.random() * 3);
+                        }
+                        attempts++;
+                    }
+
+                    if (!validSpawn) {
+                        x = -padding;
+                        y = 20;
+                    }
+
+                    let type = "drone";
+                    let hp = 1;
+                    let speed = 1.3;
+                    let size = 14;
+
+                    if (
+                        Math.random() < 0.25 + Math.min(0.35, score / 600) &&
+                        score > 60
+                    ) {
+                        type = "tank";
+                        hp = 3;
+                        speed = 0.75;
+                        size = 20;
+                    } else if (score > 120 && Math.random() < 0.35) {
+                        type = "tank";
+                        hp = 2;
+                        speed = 0.85;
+                        size = 18;
+                    }
+
+                    let speedBonus = Math.min(1.3, score / 500);
+                    if (type === "drone") speed += speedBonus * 0.5;
+                    else speed += speedBonus * 0.25;
+
+                    enemies.push(new Enemy(x, y, speed, hp, size, type));
+                }
+
+                // ----- TEMBAK OTOMATIS -----
+                function tryShoot() {
+                    if (!gameRunning) return;
+                    if (shootCooldown > 0) return;
+                    const angle = aimAngle;
+                    bullets.push(
+                        new Bullet(
+                            turret.x + Math.cos(angle) * 18,
+                            turret.y + Math.sin(angle) * 12,
+                            angle,
+                            1,
+                        ),
+                    );
+                    shootCooldown = SHOOT_DELAY_FRAMES;
+                }
+
+                // ----- UPDATE MUSUH & TABRAKAN (DAMAGE DIKURANGI) -----
+                function updateEnemiesAndCollision() {
+                    for (let i = 0; i < enemies.length; i++) {
+                        const e = enemies[i];
+                        e.update();
+
+                        const distToTurret = Math.hypot(
+                            e.x - turret.x,
+                            e.y - turret.y,
+                        );
+                        if (distToTurret < e.size + turret.radius) {
+                            // BUFF: damage musuh dikurangi
+                            let dmg = e.type === "tank" ? 8 : 6; // dari 18/12 jadi 8/6
+                            health = Math.max(0, health - dmg);
+                            addParticles(e.x, e.y, "#ff6633", 12);
+                            enemies.splice(i, 1);
+                            i--;
+                            if (health <= 0) {
+                                gameRunning = false;
+                                health = 0;
+                            }
+                            updateUI();
+                            continue;
+                        }
+
+                        if (
+                            e.x < -250 ||
+                            e.x > canvas.width + 250 ||
+                            e.y < -250 ||
+                            e.y > canvas.height + 250
+                        ) {
+                            enemies.splice(i, 1);
+                            i--;
+                        }
+                    }
+                }
+
+                // ----- UPDATE PELURU -----
+                function updateBullets() {
+                    for (let i = 0; i < bullets.length; i++) {
+                        bullets[i].update();
+                        if (!bullets[i].life) {
+                            bullets.splice(i, 1);
+                            i--;
+                            continue;
+                        }
+                        let hitIndex = -1;
+                        for (let j = 0; j < enemies.length; j++) {
+                            const e = enemies[j];
+                            const distToEnemy = Math.hypot(
+                                bullets[i].x - e.x,
+                                bullets[i].y - e.y,
+                            );
+                            if (distToEnemy < e.size + 6) {
+                                hitIndex = j;
+                                break;
+                            }
+                        }
+                        if (hitIndex !== -1) {
+                            const enemy = enemies[hitIndex];
+                            const killed = enemy.takeDamage(bullets[i].damage);
+                            addParticles(
+                                bullets[i].x,
+                                bullets[i].y,
+                                "#ffaa55",
+                                5,
+                            );
+                            if (killed) {
+                                let addScore = enemy.type === "tank" ? 20 : 10;
+                                score += addScore;
+                                addParticles(enemy.x, enemy.y, "#ffaa33", 14);
+                                enemies.splice(hitIndex, 1);
+                                updateUI();
+                            }
+                            bullets.splice(i, 1);
+                            i--;
+                        }
+                    }
+                }
+
+                // ----- UPDATE SPAWN -----
+                function updateSpawning() {
+                    if (!gameRunning) return;
+                    let dynamicDelay = Math.max(
+                        28,
+                        55 - Math.floor(score / 45),
+                    );
+                    dynamicDelay = Math.min(dynamicDelay, 52);
+                    if (spawnCounter <= 0) {
+                        spawnEnemyImmediate();
+                        if (score > 180 && Math.random() < 0.3) {
+                            spawnEnemyImmediate();
+                        }
+                        spawnCounter = dynamicDelay;
+                    } else {
+                        spawnCounter--;
+                    }
+                }
+
+                // ----- UPDATE COOLDOWN & SLOW TIMER -----
+                function updateCooldown() {
+                    if (shootCooldown > 0) shootCooldown--;
+                    if (bombCooldown > 0) bombCooldown--;
+                    if (slowTimer > 0) {
+                        slowTimer--;
+                        if (slowTimer <= 0 && slowActive) {
+                            // Kembalikan speed musuh
+                            for (let i = 0; i < enemies.length; i++) {
+                                enemies[i].speed = enemies[i].originalSpeed;
+                            }
+                            slowActive = false;
+                        }
+                    }
+
+                    if (gameRunning && shootCooldown === 0) {
+                        tryShoot();
+                    }
+                }
+
+                // ----- MOUSE AIM -----
+                function updateAimFromMouse(clientX, clientY) {
+                    const rect = canvas.getBoundingClientRect();
+                    const scaleX = canvas.width / rect.width;
+                    const scaleY = canvas.height / rect.height;
+                    let canvasX = (clientX - rect.left) * scaleX;
+                    let canvasY = (clientY - rect.top) * scaleY;
+                    canvasX = Math.min(Math.max(canvasX, 0), canvas.width);
+                    canvasY = Math.min(Math.max(canvasY, 0), canvas.height);
+                    mouseX = canvasX;
+                    mouseY = canvasY;
+                    const dx = mouseX - turret.x;
+                    const dy = mouseY - turret.y;
+                    aimAngle = Math.atan2(dy, dx);
+                }
+
+                // ----- EVENT LISTENERS -----
+                function handleMouseMove(e) {
+                    updateAimFromMouse(e.clientX, e.clientY);
+                }
+                function handleTouchMove(e) {
+                    e.preventDefault();
+                    if (e.touches.length) {
+                        updateAimFromMouse(
+                            e.touches[0].clientX,
+                            e.touches[0].clientY,
+                        );
+                    }
+                }
+                function handleTouchStart(e) {
+                    e.preventDefault();
+                    if (e.touches.length)
+                        updateAimFromMouse(
+                            e.touches[0].clientX,
+                            e.touches[0].clientY,
+                        );
+                }
+
+                canvas.addEventListener("mousemove", handleMouseMove);
+                canvas.addEventListener("touchmove", handleTouchMove, {
+                    passive: false,
+                });
+                canvas.addEventListener("touchstart", handleTouchStart);
+                canvas.addEventListener("mousedown", (e) => {
+                    e.preventDefault();
+                });
+
+                // Keyboard untuk skill
+                window.addEventListener("keydown", (e) => {
+                    if (e.key === "b" || e.key === "B") {
+                        e.preventDefault();
+                        useSmartBomb();
                         updateUI();
                     }
-                    bullets.splice(i,1);
-                    i--;
-                }
-            }
-        }
-        
-        // ----- SPAWN LOGIC (semakin tinggi skor semakin cepat spawn)-----
-        function updateSpawning() {
-            if(!gameRunning) return;
-            let dynamicDelay = Math.max(22, 50 - Math.floor(score / 38));
-            dynamicDelay = Math.min(dynamicDelay, 48);
-            if(spawnCounter <= 0) {
-                spawnEnemyImmediate();
-                // kadang spawn double jika score tinggi
-                if(score > 200 && Math.random()<0.35) {
-                    spawnEnemyImmediate();
-                }
-                spawnCounter = dynamicDelay;
-            } else {
-                spawnCounter--;
-            }
-        }
-        
-        // ----- UPDATE COOLDOWN & AIM -----
-        function updateCooldown() {
-            if(shootCooldown > 0) shootCooldown--;
-            // auto shoot setiap frame jika mouse bergerak atau ada musuh (tembak otomatis dengan cooldown)
-            // agar terasa responsif: sistem tembak otomatis berulang selama tombol? disini kita buat otomatis (rapid fire)
-            // lebih enak: setiap frame jika cooldown habis, langsung tembak (auto turret)
-            if(gameRunning && shootCooldown === 0) {
-                // tembak otomatis tanpa menekan apapun -> machine defense sistem
-                tryShoot();
-            }
-        }
-        
-        // ----- UPDATE MOUSE / TOUCH -----
-        function updateAimFromMouse(clientX, clientY) {
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            let canvasX = (clientX - rect.left) * scaleX;
-            let canvasY = (clientY - rect.top) * scaleY;
-            canvasX = Math.min(Math.max(canvasX, 0), canvas.width);
-            canvasY = Math.min(Math.max(canvasY, 0), canvas.height);
-            mouseX = canvasX;
-            mouseY = canvasY;
-            const dx = mouseX - turret.x;
-            const dy = mouseY - turret.y;
-            aimAngle = Math.atan2(dy, dx);
-        }
-        
-        // ----- EVENT LISTENERS -----
-        function handleMouseMove(e) {
-            updateAimFromMouse(e.clientX, e.clientY);
-        }
-        function handleTouchMove(e) {
-            e.preventDefault();
-            if(e.touches.length) {
-                updateAimFromMouse(e.touches[0].clientX, e.touches[0].clientY);
-            }
-        }
-        function handleTouchStart(e){
-            e.preventDefault();
-            if(e.touches.length) updateAimFromMouse(e.touches[0].clientX, e.touches[0].clientY);
-        }
-        
-        canvas.addEventListener('mousemove', handleMouseMove);
-        canvas.addEventListener('touchmove', handleTouchMove, {passive:false});
-        canvas.addEventListener('touchstart', handleTouchStart);
-        canvas.addEventListener('mousedown', (e) => { e.preventDefault(); });
-        
-        // ----- UI UPDATE -----
-        function updateUI() {
-            document.getElementById('scoreValue').innerText = Math.floor(score);
-            document.getElementById('healthValue').innerText = Math.floor(health);
-            document.getElementById('enemiesCount').innerText = enemies.length;
-        }
-        
-        // ----- RENDER GRAFIK MACHINE / TURRET & CAUTION STYLE-----
-        function drawTurretAndEffects() {
-            // draw base
-            ctx.save();
-            ctx.shadowBlur = 0;
-            ctx.fillStyle = "#4a5b6e";
-            ctx.beginPath();
-            ctx.ellipse(turret.x, turret.y+6, 24, 12, 0, 0, Math.PI*2);
-            ctx.fill();
-            ctx.fillStyle = "#697e9c";
-            ctx.beginPath();
-            ctx.ellipse(turret.x, turret.y, 26, 20, 0, 0, Math.PI*2);
-            ctx.fill();
-            // laras meriam (berputar mengikuti sudut)
-            const barrelLength = 32;
-            const endX = turret.x + Math.cos(aimAngle) * barrelLength;
-            const endY = turret.y + Math.sin(aimAngle) * barrelLength;
-            ctx.beginPath();
-            ctx.lineWidth = 12;
-            ctx.lineCap = "round";
-            ctx.strokeStyle = "#bbaa77";
-            ctx.shadowColor = "#ffaa44";
-            ctx.beginPath();
-            ctx.moveTo(turret.x, turret.y);
-            ctx.lineTo(endX, endY);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(endX, endY, 7, 0, Math.PI*2);
-            ctx.fillStyle = "#ff8844";
-            ctx.fill();
-            ctx.fillStyle = "#ffdd77";
-            ctx.beginPath();
-            ctx.arc(endX-2, endY-2, 2, 0, Math.PI*2);
-            ctx.fill();
-            // indikator laser / caution sight
-            ctx.beginPath();
-            ctx.arc(mouseX, mouseY, 8, 0, Math.PI*2);
-            ctx.strokeStyle = "#ff5555";
-            ctx.lineWidth = 2;
-            ctx.setLineDash([4,6]);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            // crosshair
-            ctx.beginPath();
-            ctx.moveTo(mouseX-12, mouseY);
-            ctx.lineTo(mouseX-5, mouseY);
-            ctx.moveTo(mouseX+5, mouseY);
-            ctx.lineTo(mouseX+12, mouseY);
-            ctx.moveTo(mouseX, mouseY-12);
-            ctx.lineTo(mouseX, mouseY-5);
-            ctx.moveTo(mouseX, mouseY+5);
-            ctx.lineTo(mouseX, mouseY+12);
-            ctx.strokeStyle = "#ffaa55";
-            ctx.stroke();
-            ctx.restore();
-        }
-        
-        function drawCautionWarnings() {
-            if(health < 35 && gameRunning) {
-                ctx.font = "bold 24monospace";
-                ctx.fillStyle = "#ff0000aa";
-                ctx.shadowBlur = 0;
-                ctx.fillText("⚠️ SYSTEM FAILURE ⚠️", canvas.width/2-140, 50);
-                ctx.font = "14px monospace";
-                ctx.fillStyle = "#ff8888";
-                ctx.fillText("CAUTION: MACHINE INTEGRITY LOW", canvas.width/2-130, 90);
-            }
-            if(enemies.length > 8) {
-                ctx.fillStyle = "#ffaa33";
-                ctx.font = "bold 16px monospace";
-                ctx.fillText(">> WARNING: ROGUE SWARM DETECTED <<", canvas.width/2-180, 130);
-            }
-        }
-        
-        function drawGameOver() {
-            if(!gameRunning) {
-                ctx.globalAlpha = 0.85;
-                ctx.fillStyle = "#010101";
-                ctx.fillRect(0,0,canvas.width,canvas.height);
-                ctx.globalAlpha = 1;
-                ctx.font = "bold 36monospace";
-                ctx.fillStyle = "#ff6633";
-                ctx.shadowBlur = 4;
-                ctx.fillText("☠️ MACHINE DESTROYED ☠️", canvas.width/2-210, canvas.height/2-40);
-                ctx.font = "24monospace";
-                ctx.fillStyle = "#ffaa88";
-                ctx.fillText("> PRESS [REBOOT MACHINE] <", canvas.width/2-170, canvas.height/2+40);
-                ctx.fillStyle = "#ccccaa";
-                ctx.font = "18monospace";
-                ctx.fillText("SCORE: "+Math.floor(score), canvas.width/2-60, canvas.height/2+100);
-            }
-        }
-        
-        // ----- ANIMASI & UPDATE FRAME-----
-        function updateFrame() {
-            if(gameRunning) {
-                updateEnemiesAndCollision();
-                updateBullets();
-                updateSpawning();
-                updateCooldown();
-                // update partikel
-                for(let i=0;i<particles.length;i++) {
-                    particles[i].update();
-                    if(particles[i].life <= 0) {
-                        particles.splice(i,1);
-                        i--;
+                    if (e.key === "s" || e.key === "S") {
+                        e.preventDefault();
+                        useSlowField();
+                        updateUI();
+                    }
+                });
+
+                // ----- UI UPDATE -----
+                function updateUI() {
+                    document.getElementById("scoreValue").innerText =
+                        Math.floor(score);
+                    document.getElementById("healthValue").innerText =
+                        Math.floor(health);
+                    document.getElementById("enemiesCount").innerText =
+                        enemies.length;
+
+                    const bombElem = document.getElementById("bombCooldown");
+                    if (bombCooldown > 0) {
+                        bombElem.innerText = Math.ceil(bombCooldown / 60) + "s";
+                    } else {
+                        bombElem.innerText = "READY";
+                    }
+
+                    const slowElem = document.getElementById("slowCooldown");
+                    if (slowTimer > 0) {
+                        slowElem.innerText = Math.ceil(slowTimer / 60) + "s";
+                    } else {
+                        slowElem.innerText = "READY";
                     }
                 }
-                if(health <= 0) {
-                    gameRunning = false;
-                    updateUI();
+
+                // ----- RENDER -----
+                function drawTurretAndEffects() {
+                    ctx.save();
+                    ctx.shadowBlur = 0;
+                    ctx.fillStyle = "#4a5b6e";
+                    ctx.beginPath();
+                    ctx.ellipse(
+                        turret.x,
+                        turret.y + 6,
+                        24,
+                        12,
+                        0,
+                        0,
+                        Math.PI * 2,
+                    );
+                    ctx.fill();
+                    ctx.fillStyle = "#697e9c";
+                    ctx.beginPath();
+                    ctx.ellipse(turret.x, turret.y, 26, 20, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    const barrelLength = 32;
+                    const endX = turret.x + Math.cos(aimAngle) * barrelLength;
+                    const endY = turret.y + Math.sin(aimAngle) * barrelLength;
+                    ctx.beginPath();
+                    ctx.lineWidth = 12;
+                    ctx.lineCap = "round";
+                    ctx.strokeStyle = "#bbaa77";
+                    ctx.shadowColor = "#ffaa44";
+                    ctx.beginPath();
+                    ctx.moveTo(turret.x, turret.y);
+                    ctx.lineTo(endX, endY);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(endX, endY, 7, 0, Math.PI * 2);
+                    ctx.fillStyle = "#ff8844";
+                    ctx.fill();
+                    ctx.fillStyle = "#ffdd77";
+                    ctx.beginPath();
+                    ctx.arc(endX - 2, endY - 2, 2, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.arc(mouseX, mouseY, 8, 0, Math.PI * 2);
+                    ctx.strokeStyle = "#ff5555";
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([4, 6]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    ctx.beginPath();
+                    ctx.moveTo(mouseX - 12, mouseY);
+                    ctx.lineTo(mouseX - 5, mouseY);
+                    ctx.moveTo(mouseX + 5, mouseY);
+                    ctx.lineTo(mouseX + 12, mouseY);
+                    ctx.moveTo(mouseX, mouseY - 12);
+                    ctx.lineTo(mouseX, mouseY - 5);
+                    ctx.moveTo(mouseX, mouseY + 5);
+                    ctx.lineTo(mouseX, mouseY + 12);
+                    ctx.strokeStyle = "#ffaa55";
+                    ctx.stroke();
+                    ctx.restore();
                 }
-                updateUI();
-            }
-            // rendering
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-            // grid pabrik
-            ctx.strokeStyle = "#2a3344";
-            ctx.lineWidth = 0.5;
-            for(let i=0;i<canvas.width+40;i+=40){
-                ctx.beginPath();
-                ctx.moveTo(i,0);
-                ctx.lineTo(i,canvas.height);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(0,i%canvas.height);
-                ctx.lineTo(canvas.width,i%canvas.height);
-                ctx.stroke();
-            }
-            // draw semua entitas
-            for(let p of particles) p.draw(ctx);
-            for(let b of bullets) b.draw(ctx);
-            for(let e of enemies) e.draw(ctx);
-            drawTurretAndEffects();
-            drawCautionWarnings();
-            drawGameOver();
-            requestAnimationFrame(updateFrame);
-        }
-        
-        // INIT & RESET BUTTON
-        resetGame();
-        document.getElementById('resetBtn').addEventListener('click', () => {
-            resetGame();
-            gameRunning = true;
-            health = 100;
-            score = 0;
-            enemies = [];
-            bullets = [];
-            particles = [];
-            shootCooldown = 0;
-            spawnCounter = 8;
-            updateUI();
-        });
-        
-        updateFrame();
-    })();
-</script>
-</body>
+
+                function drawCautionWarnings() {
+                    if (health < 35 && gameRunning) {
+                        ctx.font = "bold 22px monospace";
+                        ctx.fillStyle = "#ff0000aa";
+                        ctx.shadowBlur = 0;
+                        ctx.fillText(
+                            "⚠️ SYSTEM FAILURE ⚠️",
+                            canvas.width / 2 - 130,
+                            50,
+                        );
+                        ctx.font = "12px monospace";
+                        ctx.fillStyle = "#ff8888";
+                        ctx.fillText(
+                            "CAUTION: MACHINE INTEGRITY LOW",
+                            canvas.width / 2 - 120,
+                            85,
+                        );
+                    }
+                    if (enemies.length > 10) {
+                        ctx.fillStyle = "#ffaa33";
+                        ctx.font = "bold 14px monospace";
+                        ctx.fillText(
+                            ">> WARNING: ROGUE SWARM DETECTED <<",
+                            canvas.width / 2 - 165,
+                            120,
+                        );
+                    }
+                    if (slowActive) {
+                        ctx.font = "bold 18px monospace";
+                        ctx.fillStyle = "#88aaff";
+                        ctx.shadowBlur = 0;
+                        ctx.fillText(
+                            "🐌 SLOW FIELD ACTIVE",
+                            canvas.width / 2 - 100,
+                            160,
+                        );
+                    }
+                }
+
+                function drawGameOver() {
+                    if (!gameRunning) {
+                        ctx.globalAlpha = 0.85;
+                        ctx.fillStyle = "#010101";
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.globalAlpha = 1;
+                        ctx.font = "bold 36px monospace";
+                        ctx.fillStyle = "#ff6633";
+                        ctx.shadowBlur = 4;
+                        ctx.fillText(
+                            "☠️ MACHINE DESTROYED ☠️",
+                            canvas.width / 2 - 210,
+                            canvas.height / 2 - 40,
+                        );
+                        ctx.font = "24px monospace";
+                        ctx.fillStyle = "#ffaa88";
+                        ctx.fillText(
+                            "> PRESS [REBOOT MACHINE] <",
+                            canvas.width / 2 - 170,
+                            canvas.height / 2 + 40,
+                        );
+                        ctx.fillStyle = "#ccccaa";
+                        ctx.font = "18px monospace";
+                        ctx.fillText(
+                            "SCORE: " + Math.floor(score),
+                            canvas.width / 2 - 55,
+                            canvas.height / 2 + 100,
+                        );
+                    }
+                }
+
+                // ----- ANIMASI -----
+                function updateFrame() {
+                    if (gameRunning) {
+                        updateEnemiesAndCollision();
+                        updateBullets();
+                        updateSpawning();
+                        updateCooldown();
+
+                        for (let i = 0; i < particles.length; i++) {
+                            particles[i].update();
+                            if (particles[i].life <= 0) {
+                                particles.splice(i, 1);
+                                i--;
+                            }
+                        }
+
+                        if (health <= 0) {
+                            gameRunning = false;
+                            updateUI();
+                        }
+                        updateUI();
+                    }
+
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    ctx.strokeStyle = "#2a3344";
+                    ctx.lineWidth = 0.5;
+                    for (let i = 0; i < canvas.width + 40; i += 40) {
+                        ctx.beginPath();
+                        ctx.moveTo(i, 0);
+                        ctx.lineTo(i, canvas.height);
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.moveTo(0, i % canvas.height);
+                        ctx.lineTo(canvas.width, i % canvas.height);
+                        ctx.stroke();
+                    }
+
+                    for (let p of particles) p.draw(ctx);
+                    for (let b of bullets) b.draw(ctx);
+                    for (let e of enemies) e.draw(ctx);
+                    drawTurretAndEffects();
+                    drawCautionWarnings();
+                    drawGameOver();
+                    requestAnimationFrame(updateFrame);
+                }
+
+                // ----- BUTTON SKILL -----
+                document
+                    .getElementById("bombBtn")
+                    .addEventListener("click", () => {
+                        useSmartBomb();
+                        updateUI();
+                    });
+                document
+                    .getElementById("slowBtn")
+                    .addEventListener("click", () => {
+                        useSlowField();
+                        updateUI();
+                    });
+
+                // INIT
+                resetGame();
+                document
+                    .getElementById("resetBtn")
+                    .addEventListener("click", () => {
+                        resetGame();
+                        gameRunning = true;
+                        health = 150;
+                        score = 0;
+                        enemies = [];
+                        bullets = [];
+                        particles = [];
+                        shootCooldown = 0;
+                        bombCooldown = 0;
+                        slowActive = false;
+                        slowTimer = 0;
+                        spawnCounter = 8;
+                        updateUI();
+                    });
+
+                updateFrame();
+            })();
+        </script>
+    </body>
 </html>
